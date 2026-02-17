@@ -5,6 +5,8 @@ import { CropsModule } from './crops/crops.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ListingsModule } from './listings/listings.module';
 import { MessagesModule } from './messages/messages.module';
+import { UserModule } from './user/user.module';
+import { DealModule } from './deal/deal.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -45,6 +47,8 @@ import * as Joi from 'joi';
     AnalyticsModule,
     ListingsModule,
     MessagesModule,
+    UserModule,
+    DealModule,
   ],
 })
 export class AppModule {}
