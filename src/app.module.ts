@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CropsModule } from './crops/crops.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { ListingsModule } from './listings/listings.module';
+import { MessagesModule } from './messages/messages.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -37,6 +41,10 @@ import * as Joi from 'joi';
         };
       },
     }),
+    CropsModule,
+    AnalyticsModule,
+    ListingsModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}
