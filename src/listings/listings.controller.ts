@@ -1,59 +1,51 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  Request,
+  Controller, Get, Post, Body, Patch,
+  Param, Delete, Query, UseGuards, Request,
 } from '@nestjs/common';
 import { ListingsService } from './listings.service';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
+// STUB guards – swap for real ones when Auth module is merged
+import { AuthenticatedGuard, RolesGuard, Roles } from '../shared/auth.guard';
+import { UserRole } from '../shared/user.interface';
 
 @Controller('listings')
 export class ListingsController {
-  constructor(private readonly listingsService: ListingsService) {}
+  constructor(private readonly svc: ListingsService) {}
 
-  @Post()
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // TODO: Add @Roles(UserRole.FARMER) when auth module is ready
-  // For now, farmerId should be passed in body for testing
-  create(@Body() body: CreateListingDto & { farmerId: string }) {
-    const { farmerId, ...createListingDto } = body;
-    return this.listingsService.create(farmerId, createListingDto);
-  }
-
+  /** Public */
   @Get()
-  findAll(@Query() filters: any) {
-    return this.listingsService.findAll(filters);
-  }
-
-  @Get('farmer/:farmerId')
-  // TODO: This will become 'my-listings' when auth is integrated
-  findByFarmer(@Param('farmerId') farmerId: string) {
-    return this.listingsService.findByFarmer(farmerId);
-  }
+  findAll(@Query() filters: any) { return this.svc.findAll(filters); }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.listingsService.findOne(id);
+  findOne(@Param('id') id: string) { return this.svc.findOne(id); }
+
+  /** Authenticated farmer routes */
+  @Get('farmer/mine')
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.FARMER)
+  findMine(@Request() req: any) {
+    return this.svc.findByFarmer(req.user.userId);
+  }
+
+  @Post()
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.FARMER)
+  create(@Request() req: any, @Body() dto: CreateListingDto) {
+    return this.svc.create(req.user.userId, dto);
   }
 
   @Patch(':id')
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // For now, farmerId should be passed in body for testing
-  update(@Param('id') id: string, @Body() body: UpdateListingDto & { farmerId: string }) {
-    const { farmerId, ...updateListingDto } = body;
-    return this.listingsService.update(id, farmerId, updateListingDto);
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.FARMER)
+  update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateListingDto) {
+    return this.svc.update(id, req.user.userId, dto);
   }
 
   @Delete(':id')
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // For now, farmerId should be passed in query for testing
-  remove(@Param('id') id: string, @Query('farmerId') farmerId: string) {
-    return this.listingsService.remove(id, farmerId);
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.FARMER)
+  remove(@Request() req: any, @Param('id') id: string) {
+    return this.svc.remove(id, req.user.userId);
   }
 }

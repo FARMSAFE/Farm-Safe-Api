@@ -7,50 +7,33 @@ import { UpdateCropDto } from './dto/update-crop.dto';
 
 @Injectable()
 export class CropsService {
-  constructor(
-    @InjectRepository(Crop)
-    private cropsRepository: Repository<Crop>,
-  ) {}
+  constructor(@InjectRepository(Crop) private repo: Repository<Crop>) {}
 
-  async create(createCropDto: CreateCropDto): Promise<Crop> {
-    const crop = this.cropsRepository.create(createCropDto);
-    return await this.cropsRepository.save(crop);
+  async create(dto: CreateCropDto): Promise<Crop> {
+    return this.repo.save(this.repo.create(dto));
   }
 
   async findAll(category?: string): Promise<Crop[]> {
-    const query: any = { isActive: true };
-    
-    if (category) {
-      query.category = category;
-    }
-
-    return await this.cropsRepository.find({
-      where: query,
+    return this.repo.find({
+      where: { isActive: true, ...(category ? { category: category as any } : {}) },
       order: { name: 'ASC' },
     });
   }
 
   async findOne(id: string): Promise<Crop> {
-    const crop = await this.cropsRepository.findOne({
-      where: { id },
-    });
-
-    if (!crop) {
-      throw new NotFoundException(`Crop with ID ${id} not found`);
-    }
-
+    const crop = await this.repo.findOne({ where: { id } });
+    if (!crop) throw new NotFoundException(`Crop ${id} not found`);
     return crop;
   }
 
-  async update(id: string, updateCropDto: UpdateCropDto): Promise<Crop> {
+  async update(id: string, dto: UpdateCropDto): Promise<Crop> {
     const crop = await this.findOne(id);
-    Object.assign(crop, updateCropDto);
-    return await this.cropsRepository.save(crop);
+    return this.repo.save(Object.assign(crop, dto));
   }
 
   async remove(id: string): Promise<void> {
     const crop = await this.findOne(id);
     crop.isActive = false;
-    await this.cropsRepository.save(crop);
+    await this.repo.save(crop);
   }
 }

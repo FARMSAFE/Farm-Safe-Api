@@ -7,9 +7,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { ListingsModule } from './listings/listings.module';
 import { MessagesModule } from './messages/messages.module';
 import { UserModule } from './user/user.module';
-import { DealModule } from './deal/deal.module';
 import { AuthModule } from './auth/auth.module';
 import { Session } from './auth/entities/session.entity';
+import { ProcurementModule } from './procurement/procurement.module';
+import { AlertsModule } from './alerts/alerts.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -54,8 +55,9 @@ import * as Joi from 'joi';
     ListingsModule,
     MessagesModule,
     UserModule,
-    DealModule,
     AuthModule,
+    ProcurementModule,
+    AlertsModule,
   ],
 })
 export class AppModule {}

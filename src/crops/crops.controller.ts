@@ -1,49 +1,48 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
+  Controller, Get, Post, Body, Patch,
+  Param, Delete, Query, UseGuards,
 } from '@nestjs/common';
 import { CropsService } from './crops.service';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
+// STUB guards – swap for real ones when Auth module is merged
+import { AuthenticatedGuard, RolesGuard, Roles } from '../shared/auth.guard';
+import { UserRole } from '../shared/user.interface';
 
 @Controller('crops')
 export class CropsController {
-  constructor(private readonly cropsService: CropsService) {}
+  constructor(private readonly svc: CropsService) {}
 
-  @Post()
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // TODO: Add @Roles(UserRole.ADMIN) when auth module is ready
-  create(@Body() createCropDto: CreateCropDto) {
-    return this.cropsService.create(createCropDto);
-  }
-
+  /** Public – anyone can browse the crop catalogue */
   @Get()
   findAll(@Query('category') category?: string) {
-    return this.cropsService.findAll(category);
+    return this.svc.findAll(category);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.cropsService.findOne(id);
+    return this.svc.findOne(id);
+  }
+
+  /** Admin-only write operations */
+  @Post()
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  create(@Body() dto: CreateCropDto) {
+    return this.svc.create(dto);
   }
 
   @Patch(':id')
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // TODO: Add @Roles(UserRole.ADMIN) when auth module is ready
-  update(@Param('id') id: string, @Body() updateCropDto: UpdateCropDto) {
-    return this.cropsService.update(id, updateCropDto);
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(@Param('id') id: string, @Body() dto: UpdateCropDto) {
+    return this.svc.update(id, dto);
   }
 
   @Delete(':id')
-  // TODO: Add @UseGuards(JwtAuthGuard, RolesGuard) when auth module is ready
-  // TODO: Add @Roles(UserRole.ADMIN) when auth module is ready
+  @UseGuards(AuthenticatedGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   remove(@Param('id') id: string) {
-    return this.cropsService.remove(id);
+    return this.svc.remove(id);
   }
 }

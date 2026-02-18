@@ -1,44 +1,29 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Query,
+  Controller, Get, Post, Body,
+  Patch, Param, UseGuards, Request,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { AuthenticatedGuard } from '../shared/auth.guard';
 
 @Controller('messages')
+@UseGuards(AuthenticatedGuard)
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(private readonly svc: MessagesService) {}
 
   @Post()
-  // TODO: Add @UseGuards(JwtAuthGuard) when auth module is ready
-  // For now, senderId should be passed in body for testing
-  create(@Body() body: CreateMessageDto & { senderId: string }) {
-    const { senderId, ...createMessageDto } = body;
-    return this.messagesService.create(senderId, createMessageDto);
+  create(@Request() req: any, @Body() dto: CreateMessageDto) {
+    return this.svc.create(req.user.userId, dto);
   }
 
-  @Get('user/:userId')
-  // TODO: This will become 'my-messages' when auth is integrated
-  findUserMessages(@Param('userId') userId: string) {
-    return this.messagesService.findUserMessages(userId);
-  }
+  @Get()
+  findMine(@Request() req: any) { return this.svc.findUserMessages(req.user.userId); }
 
-  @Get('conversation')
-  // TODO: Add @UseGuards(JwtAuthGuard) when auth module is ready
-  findConversation(
-    @Query('userId1') userId1: string,
-    @Query('userId2') userId2: string,
-  ) {
-    return this.messagesService.findConversation(userId1, userId2);
+  @Get('conversation/:userId')
+  findConversation(@Request() req: any, @Param('userId') other: string) {
+    return this.svc.findConversation(req.user.userId, other);
   }
 
   @Patch(':id/read')
-  markAsRead(@Param('id') id: string) {
-    return this.messagesService.markAsRead(id);
-  }
+  markAsRead(@Param('id') id: string) { return this.svc.markAsRead(id); }
 }

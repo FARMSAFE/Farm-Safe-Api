@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable, NotFoundException, ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Listing, ListingStatus } from './entities/listing.entity';
@@ -7,79 +9,40 @@ import { UpdateListingDto } from './dto/update-listing.dto';
 
 @Injectable()
 export class ListingsService {
-  constructor(
-    @InjectRepository(Listing)
-    private listingsRepository: Repository<Listing>,
-  ) {}
+  constructor(@InjectRepository(Listing) private repo: Repository<Listing>) {}
 
-  async create(farmerId: string, createListingDto: CreateListingDto): Promise<Listing> {
-    const listing = this.listingsRepository.create({
-      ...createListingDto,
-      farmerId,
-    });
-    return await this.listingsRepository.save(listing);
+  async create(farmerId: string, dto: CreateListingDto): Promise<Listing> {
+    return this.repo.save(this.repo.create({ ...dto, farmerId }));
   }
 
   async findAll(filters?: any): Promise<Listing[]> {
-    const query: any = { isActive: true };
-    
-    if (filters?.cropId) query.cropId = filters.cropId;
-    if (filters?.district) query.district = filters.district;
-    if (filters?.status) query.status = filters.status;
-
-    return await this.listingsRepository.find({
-      where: query,
-      relations: ['crop'], // Only load crop relation (user relation commented out in entity)
-      order: { createdAt: 'DESC' },
-    });
+    const where: any = { isActive: true };
+    if (filters?.cropId)   where.cropId  = filters.cropId;
+    if (filters?.district) where.district = filters.district;
+    if (filters?.status)   where.status   = filters.status;
+    return this.repo.find({ where, relations: ['crop'], order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string): Promise<Listing> {
-    const listing = await this.listingsRepository.findOne({
-      where: { id },
-      relations: ['crop'],
-    });
-
-    if (!listing) {
-      throw new NotFoundException(`Listing with ID ${id} not found`);
-    }
-
-    return listing;
+    const l = await this.repo.findOne({ where: { id }, relations: ['crop'] });
+    if (!l) throw new NotFoundException(`Listing ${id} not found`);
+    return l;
   }
 
   async findByFarmer(farmerId: string): Promise<Listing[]> {
-    return await this.listingsRepository.find({
-      where: { farmerId },
-      relations: ['crop'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.repo.find({ where: { farmerId }, relations: ['crop'], order: { createdAt: 'DESC' } });
   }
 
-  async update(id: string, farmerId: string, updateListingDto: UpdateListingDto): Promise<Listing> {
-    const listing = await this.findOne(id);
-
-    if (listing.farmerId !== farmerId) {
-      throw new ForbiddenException('You can only update your own listings');
-    }
-
-    Object.assign(listing, updateListingDto);
-    return await this.listingsRepository.save(listing);
+  async update(id: string, farmerId: string, dto: UpdateListingDto): Promise<Listing> {
+    const l = await this.findOne(id);
+    if (l.farmerId !== farmerId) throw new ForbiddenException('Not your listing');
+    return this.repo.save(Object.assign(l, dto));
   }
 
   async remove(id: string, farmerId: string): Promise<void> {
-    const listing = await this.findOne(id);
-
-    if (listing.farmerId !== farmerId) {
-      throw new ForbiddenException('You can only delete your own listings');
-    }
-
-    listing.isActive = false;
-    await this.listingsRepository.save(listing);
-  }
-
-  async updateStatus(id: string, status: ListingStatus): Promise<Listing> {
-    const listing = await this.findOne(id);
-    listing.status = status;
-    return await this.listingsRepository.save(listing);
+    const l = await this.findOne(id);
+    if (l.farmerId !== farmerId) throw new ForbiddenException('Not your listing');
+    l.isActive = false;
+    await this.repo.save(l);
   }
 }

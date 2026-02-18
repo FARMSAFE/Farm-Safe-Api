@@ -1,41 +1,26 @@
 import {
-  WebSocketGateway,
-  WebSocketServer,
-  SubscribeMessage,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  WebSocketGateway, WebSocketServer,
+  SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ cors: { origin: '*' } })
 export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
-
-  private users = new Map<string, string>();
+  @WebSocketServer() server: Server;
+  private users = new Map<string, string>(); // userId → socketId
 
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
-    if (userId) {
-      this.users.set(userId, client.id);
-      console.log(`User connected: ${userId}`);
-    }
+    if (userId) this.users.set(userId, client.id);
   }
 
   handleDisconnect(client: Socket) {
-    this.users.forEach((socketId, userId) => {
-      if (socketId === client.id) {
-        this.users.delete(userId);
-        console.log(`User disconnected: ${userId}`);
-      }
-    });
+    this.users.forEach((sid, uid) => { if (sid === client.id) this.users.delete(uid); });
   }
 
   @SubscribeMessage('send_message')
-  handleMessage(client: Socket, payload: any) {
-    const receiverSocketId = this.users.get(payload.receiverId);
-    if (receiverSocketId) {
-      this.server.to(receiverSocketId).emit('receive_message', payload);
-    }
+  handleMessage(_client: Socket, payload: any) {
+    const sid = this.users.get(payload.receiverId);
+    if (sid) this.server.to(sid).emit('receive_message', payload);
   }
 }

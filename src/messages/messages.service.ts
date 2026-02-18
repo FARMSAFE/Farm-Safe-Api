@@ -6,21 +6,14 @@ import { CreateMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class MessagesService {
-  constructor(
-    @InjectRepository(Message)
-    private messagesRepository: Repository<Message>,
-  ) {}
+  constructor(@InjectRepository(Message) private repo: Repository<Message>) {}
 
-  async create(senderId: string, createMessageDto: CreateMessageDto): Promise<Message> {
-    const message = this.messagesRepository.create({
-      ...createMessageDto,
-      senderId,
-    });
-    return await this.messagesRepository.save(message);
+  async create(senderId: string, dto: CreateMessageDto): Promise<Message> {
+    return this.repo.save(this.repo.create({ ...dto, senderId }));
   }
 
   async findConversation(userId1: string, userId2: string): Promise<Message[]> {
-    return await this.messagesRepository.find({
+    return this.repo.find({
       where: [
         { senderId: userId1, receiverId: userId2 },
         { senderId: userId2, receiverId: userId1 },
@@ -30,18 +23,16 @@ export class MessagesService {
   }
 
   async findUserMessages(userId: string): Promise<Message[]> {
-    return await this.messagesRepository.find({
+    return this.repo.find({
       where: [{ senderId: userId }, { receiverId: userId }],
       order: { createdAt: 'DESC' },
     });
   }
 
   async markAsRead(id: string): Promise<Message> {
-    const message = await this.messagesRepository.findOne({ where: { id } });
-    if (!message) {
-      throw new NotFoundException(`Message with ID ${id} not found`);
-    }
-    message.isRead = true;
-    return await this.messagesRepository.save(message);
+    const m = await this.repo.findOne({ where: { id } });
+    if (!m) throw new NotFoundException(`Message ${id} not found`);
+    m.isRead = true;
+    return this.repo.save(m);
   }
 }

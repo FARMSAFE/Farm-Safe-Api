@@ -6,9 +6,9 @@ import { MessagesGateway } from './messages.gateway';
 import { Message } from './entities/message.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Message])],
+  imports:     [TypeOrmModule.forFeature([Message])],
   controllers: [MessagesController],
-  providers: [MessagesService, MessagesGateway],
-  exports: [MessagesService, TypeOrmModule], // Export for other modules
+  providers:   [MessagesService, MessagesGateway],
+  exports:     [MessagesService],
 })
 export class MessagesModule {}
