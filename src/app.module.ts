@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClimateModule } from './climate/climate.module';  // ← add this import
 import { CropsModule } from './crops/crops.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ListingsModule } from './listings/listings.module';
@@ -58,6 +59,7 @@ import * as Joi from 'joi';
     AuthModule,
     ProcurementModule,
     AlertsModule,
+    ClimateModule, 
   ],
 })
 export class AppModule {}
