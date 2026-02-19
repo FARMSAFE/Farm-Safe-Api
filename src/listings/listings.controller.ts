@@ -25,27 +25,27 @@ export class ListingsController {
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.FARMER)
   findMine(@Request() req: any) {
-    return this.svc.findByFarmer(req.user.userId);
+    return this.svc.findByFarmer(req.user.id);
   }
 
   @Post()
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.FARMER)
   create(@Request() req: any, @Body() dto: CreateListingDto) {
-    return this.svc.create(req.user.userId, dto);
+    return this.svc.create(req.user.id, dto);
   }
 
   @Patch(':id')
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.FARMER)
   update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateListingDto) {
-    return this.svc.update(id, req.user.userId, dto);
+    return this.svc.update(id, req.user.id, dto);
   }
 
   @Delete(':id')
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.FARMER)
   remove(@Request() req: any, @Param('id') id: string) {
-    return this.svc.remove(id, req.user.userId);
+    return this.svc.remove(id, req.user.id);
   }
 }

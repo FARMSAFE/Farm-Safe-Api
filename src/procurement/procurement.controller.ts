@@ -18,7 +18,7 @@ export class ProcurementController {
   @Get('buyer/mine')
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.BUYER)
-  findMine(@Request() req: any) { return this.svc.findByBuyer(req.user.userId); }
+  findMine(@Request() req: any) { return this.svc.findByBuyer(req.user.id); }
 
   @Get(':id')
   findOne(@Param('id') id: string) { return this.svc.findOne(id); }
@@ -27,20 +27,20 @@ export class ProcurementController {
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.BUYER)
   create(@Request() req: any, @Body() dto: CreateProcurementDto) {
-    return this.svc.create(req.user.userId, dto);
+    return this.svc.create(req.user.id, dto);
   }
 
   @Patch(':id')
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.BUYER)
   update(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateProcurementDto) {
-    return this.svc.update(id, req.user.userId, dto);
+    return this.svc.update(id, req.user.id, dto);
   }
 
   @Delete(':id')
   @UseGuards(AuthenticatedGuard, RolesGuard)
   @Roles(UserRole.BUYER)
   remove(@Request() req: any, @Param('id') id: string) {
-    return this.svc.remove(id, req.user.userId);
+    return this.svc.remove(id, req.user.id);
   }
 }

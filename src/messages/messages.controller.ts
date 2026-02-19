@@ -13,15 +13,15 @@ export class MessagesController {
 
   @Post()
   create(@Request() req: any, @Body() dto: CreateMessageDto) {
-    return this.svc.create(req.user.userId, dto);
+    return this.svc.create(req.user.id, dto);
   }
 
   @Get()
-  findMine(@Request() req: any) { return this.svc.findUserMessages(req.user.userId); }
+  findMine(@Request() req: any) { return this.svc.findUserMessages(req.user.id); }
 
   @Get('conversation/:userId')
   findConversation(@Request() req: any, @Param('userId') other: string) {
-    return this.svc.findConversation(req.user.userId, other);
+    return this.svc.findConversation(req.user.id, other);
   }
 
   @Patch(':id/read')

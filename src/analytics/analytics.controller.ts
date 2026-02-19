@@ -15,5 +15,5 @@ export class AnalyticsController {
 
   @Get('my-activity')
   @UseGuards(AuthenticatedGuard)
-  getMyActivity(@Request() req: any) { return this.svc.getUserActivity(req.user.userId); }
+  getMyActivity(@Request() req: any) { return this.svc.getUserActivity(req.user.id); }
 }
