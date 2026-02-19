@@ -55,10 +55,11 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(registerDto.password, salt);
 
-    // Create user
-    const user = this.userRepository.create({
+        const user = this.userRepository.create({
       ...registerDto,
       password: hashedPassword,
+      isEmailVerified: true,
+      status: UserStatus.ACTIVE,
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -68,29 +69,15 @@ export class AuthService {
   }
 
   async login(user: any, req: any): Promise<any> {
-    // Log the login in session
+    // express-session + session store handles persistence automatically
+    // We just call req.login() and update lastLoginAt
     return new Promise((resolve, reject) => {
       req.login(user, async (err) => {
         if (err) {
           reject(err);
+          return;
         }
-        
-        // Store session in database
-        const sessionId = req.sessionID;
-        const session = this.sessionRepository.create({
-          sessionId,
-          userId: user.id,
-          data: req.session,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'],
-        });
-        
-        await this.sessionRepository.save(session);
-        
-        // Update last login
         await this.userRepository.update(user.id, { lastLoginAt: new Date() });
-        
         resolve(user);
       });
     });
