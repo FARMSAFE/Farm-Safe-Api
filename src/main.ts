@@ -71,7 +71,7 @@ async function bootstrap() {
     origin: isProduction 
       ? frontendUrls.length > 0 
         ? frontendUrls 
-        : ['https://yourdomain.com']
+        : ['https://farmsfe.vercel.app']
       : ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
