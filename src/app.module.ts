@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClimateModule } from './climate/climate.module';  // ← add this import
+import { ClimateModule } from './climate/climate.module';
 import { CropsModule } from './crops/crops.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ListingsModule } from './listings/listings.module';
