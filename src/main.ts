@@ -13,28 +13,29 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const configService = app.get(ConfigService);
+
   const isProduction = configService.get('NODE_ENV') === 'production';
-  
-  // Get frontend URLs from env (comma-separated list)
-  const frontendUrls = configService.get('FRONTEND_URL')?.split(',') || [];
-  
-  // Ensure session secret is always a string
+
   const sessionSecret = configService.get<string>('SESSION_SECRET');
   if (!sessionSecret) {
     throw new Error('SESSION_SECRET must be defined in environment variables');
   }
 
-  // ✅ FIX: Get the Express instance to set trust proxy
+
   const expressApp = app.getHttpAdapter().getInstance();
   if (isProduction) {
     expressApp.set('trust proxy', 1);
   }
 
-  // Get session repository from DI
+  // Get frontend URLs from ENV (comma-separated)
+  const frontendUrls =
+    configService.get<string>('FRONTEND_URL')?.split(',') || [];
+
+  // Session repository
   const sessionRepository = app.get(getRepositoryToken(Session));
   const sessionStore = new TypeORMSessionStore(sessionRepository);
 
-  // Session middleware
+  
   app.use(
     session({
       name: 'farmsafe.sid',
@@ -45,14 +46,13 @@ async function bootstrap() {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
         httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        domain: isProduction ? '.yourdomain.com' : undefined,
+        secure: isProduction, // required for sameSite: 'none'
+        sameSite: isProduction ? 'none' : 'lax',
       },
-    })
+    }),
   );
 
-  // Passport middleware
+  // Passport
   app.use(passport.initialize());
   app.use(passport.session());
 
@@ -63,31 +63,27 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
       disableErrorMessages: isProduction,
-    })
+    }),
   );
 
-  // CORS configuration
+  
   app.enableCors({
-    origin: isProduction 
-      ? frontendUrls.length > 0 
-        ? frontendUrls 
-        : ['https://farmsfe.vercel.app']
+    origin: isProduction
+      ? frontendUrls
       : ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    exposedHeaders: ['Set-Cookie'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Enable shutdown hooks
   app.enableShutdownHooks();
 
   const port = configService.get('PORT') || 3000;
   await app.listen(port);
 
-  logger.log(`Application running on: http://localhost:${port}`);
+  logger.log(`Application running on port: ${port}`);
   logger.log(`Environment: ${configService.get('NODE_ENV')}`);
-  logger.log(`CORS enabled for: ${isProduction ? frontendUrls.join(', ') : 'localhost:5173'}`);
+  logger.log(`CORS enabled for: ${frontendUrls.join(', ')}`);
 }
 
 bootstrap();
